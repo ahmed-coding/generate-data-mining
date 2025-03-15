@@ -165,8 +165,8 @@ def main():
     # Parameters
     symbol = 'BTC/USDT'  # Trading pair
     interval = '1h'  # Timeframe (1 hour)
-    start_date = '2022-01-01T00:00:00Z'  # Start date in UTC
-    end_date = '2023-01-01T00:00:00Z'  # End date in UTC
+    start_date = '2020-01-01T00:00:00Z'  # Start date in UTC
+    end_date = '2021-01-01T00:00:00Z'  # End date in UTC
 
     # Fetch data from Binance
     print("Fetching data from Binance...")
