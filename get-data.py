@@ -21,7 +21,10 @@ def fetch_binance_data(symbol, timeframe, start_date, end_date):
 
     df = pd.DataFrame(all_ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
     df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
-    df = df[df['timestamp'] <= pd.to_datetime(end_date)]  # Filter data up to the end date
+
+    # Ensure the end_date is timezone-naive
+    end_date_naive = pd.to_datetime(end_date).tz_localize(None)
+    df = df[df['timestamp'] <= end_date_naive]  # Filter data up to the end date
     return df
 
 # Function to calculate ALL technical indicators
@@ -165,8 +168,8 @@ def main():
     # Parameters
     symbol = 'BTC/USDT'  # Trading pair
     interval = '1h'  # Timeframe (1 hour)
-    start_date = '2020-01-01T00:00:00Z'  # Start date in UTC
-    end_date = '2021-01-01T00:00:00Z'  # End date in UTC
+    start_date = '2022-01-01T00:00:00Z'  # Start date in UTC
+    end_date = '2023-01-01T00:00:00Z'  # End date in UTC
 
     # Fetch data from Binance
     print("Fetching data from Binance...")
