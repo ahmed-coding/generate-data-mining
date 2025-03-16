@@ -217,12 +217,12 @@ def save_to_csv(results, filename='binance_rsi_tp_sl_trading_results.csv'):
 def main():
     # Parameters
     symbol = 'BTC/USDT'  # Trading pair
-    interval = '1h'  # Timeframe (1 hour)
+    interval = '1m'  # Timeframe (1 hour)
     start_date = '2020-01-01T00:00:00Z'  # Start date in UTC
     end_date = '2021-01-01T00:00:00Z'  # End date in UTC
 
-    # filename = 'binance_futures_trading_results.csv'
-    filename = 'sma_binance_futures_trading_results.csv'
+    filename = 'binance_futures_trading_results.csv'
+    # filename = 'sma_binance_futures_trading_results.csv'
 
     # RSI Strategy Parameters
     rsi_buy_threshold = 30  # Buy when RSI < 30 (oversold)
@@ -245,11 +245,11 @@ def main():
     data = calculate_all_indicators(data)
 
     # Generate signals
-    print("Generating signals...")
-    data = sma_crossover_strategy(data)
-
     # print("Generating signals...")
-    # data = rsi_strategy(data,rsi_buy_threshold,rsi_sell_threshold)
+    # data = sma_crossover_strategy(data)
+
+    print("Generating signals...")
+    data = rsi_strategy(data,rsi_buy_threshold,rsi_sell_threshold)
 
     # Backtest the strategy
     print("Backtesting strategy...")
