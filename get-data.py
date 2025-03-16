@@ -2,9 +2,10 @@
 import ccxt
 import pandas as pd
 import ta  # Technical Analysis Library
-import openpyxl
+# import openpyxl
 from datetime import datetime, timedelta
-
+import numpy as np
+import os
 # Function to fetch historical data from Binance within a date range
 def fetch_binance_data(symbol, timeframe, start_date, end_date):
     exchange = ccxt.binance()
@@ -30,6 +31,9 @@ def fetch_binance_data(symbol, timeframe, start_date, end_date):
 # Function to calculate ALL technical indicators
 def calculate_all_indicators(df):
     # Trend Indicators
+    df['sma_2'] = ta.trend.sma_indicator(df['close'], window=2)  # SMA_2
+    df['sma_3'] = ta.trend.sma_indicator(df['close'], window=3)  # SMA_3
+    
     df['sma_20'] = ta.trend.sma_indicator(df['close'], window=20)
     df['sma_50'] = ta.trend.sma_indicator(df['close'], window=50)
     df['ema_20'] = ta.trend.ema_indicator(df['close'], window=20)
@@ -47,8 +51,8 @@ def calculate_all_indicators(df):
     df['ichimoku_base'] = ta.trend.ichimoku_base_line(df['high'], df['low'])
     df['ichimoku_a'] = ta.trend.ichimoku_a(df['high'], df['low'])
     df['ichimoku_b'] = ta.trend.ichimoku_b(df['high'], df['low'])
-    df['aroon_up'] = ta.trend.aroon_up(df['close'], window=14)
-    df['aroon_down'] = ta.trend.aroon_down(df['close'], window=14)
+    df['aroon_up'] = ta.trend.aroon_up(df['high'], df['low'], window=14)  # Fixed: Added 'high' and 'low'
+    df['aroon_down'] = ta.trend.aroon_down(df['high'], df['low'], window=14)  # Fixed: Added 'high' and 'low'
     df['stc'] = ta.trend.stc(df['close'])
 
     # Momentum Indicators
@@ -69,14 +73,14 @@ def calculate_all_indicators(df):
     df['bb_width'] = ta.volatility.bollinger_wband(df['close'], window=20, window_dev=2)
     df['kc_high'] = ta.volatility.keltner_channel_hband(df['high'], df['low'], df['close'], window=20)
     df['kc_low'] = ta.volatility.keltner_channel_lband(df['high'], df['low'], df['close'], window=20)
-    df['dc_high'] = ta.volatility.donchian_channel_hband(df['close'], window=20)
-    df['dc_low'] = ta.volatility.donchian_channel_lband(df['close'], window=20)
+    df['dc_high'] = ta.volatility.donchian_channel_hband(df['high'], df['low'],df['close'], window=20)  # Fixed: Added 'high' and 'low'
+    df['dc_low'] = ta.volatility.donchian_channel_lband(df['high'], df['low'],df['close'], window=20)  # Fixed: Added 'high' and 'low'
 
     # Volume Indicators
     df['obv'] = ta.volume.on_balance_volume(df['close'], df['volume'])
     df['cmf'] = ta.volume.chaikin_money_flow(df['high'], df['low'], df['close'], df['volume'], window=20)
     df['fi'] = ta.volume.force_index(df['close'], df['volume'], window=13)
-    df['eom'] = ta.volume.ease_of_movement(df['high'], df['low'], df['close'], df['volume'], window=14)
+    df['eom'] = ta.volume.ease_of_movement(df['high'], df['low'], df['volume'], window=14)  # Fixed: Removed redundant 'window' argument
     df['vpt'] = ta.volume.volume_price_trend(df['close'], df['volume'])
     df['nvi'] = ta.volume.negative_volume_index(df['close'], df['volume'])
     df['vwap'] = ta.volume.volume_weighted_average_price(df['high'], df['low'], df['close'], df['volume'])
@@ -84,16 +88,32 @@ def calculate_all_indicators(df):
     return df
 
 # Strategy: SMA Crossover for Long and Short Trades
+# def sma_crossover_strategy(df):
+#     df['signal'] = 0
+#     df['signal'][20:] = np.where(
+#         df['sma_20'][20:] > df['sma_50'][20:], 1, -1  # 1 for Buy, -1 for Sell
+#     )
+#     df['positions'] = df['signal'].diff()
+#     return df
+
+# Strategy: SMA_2 and SMA_3 Crossover Strategy
 def sma_crossover_strategy(df):
     df['signal'] = 0
-    df['signal'][20:] = np.where(
-        df['sma_20'][20:] > df['sma_50'][20:], 1, -1  # 1 for Buy, -1 for Sell
-    )
+    df['signal'][df['sma_2'] > df['sma_3']] = 1  # Buy signal when SMA_2 > SMA_3
+    df['signal'][df['sma_2'] < df['sma_3']] = -1  # Sell signal when SMA_2 < SMA_3
     df['positions'] = df['signal'].diff()
     return df
 
-# Backtest the strategy
-def backtest_strategy(df, symbol, interval):
+# Strategy: RSI-Based Strategy for Long and Short Trades
+def rsi_strategy(df, rsi_buy_threshold=30, rsi_sell_threshold=70):
+    df['signal'] = 0
+    df['signal'][df['rsi'] < rsi_buy_threshold] = 1  # Buy signal when RSI < 30 (oversold)
+    df['signal'][df['rsi'] > rsi_sell_threshold] = -1  # Sell signal when RSI > 70 (overbought)
+    df['positions'] = df['signal'].diff()
+    return df
+
+# Backtest the strategy with TP and SL
+def backtest_strategy(df, symbol, interval, tp_percent=5, sl_percent=1):
     trades = []
     in_position = False
     position_type = None  # 'long' or 'short'
@@ -134,17 +154,30 @@ def backtest_strategy(df, symbol, interval):
                 **{col: row[col] for col in df.columns if col not in ['signal', 'positions']}
             }
             trades.append(trade)
-        elif (row['positions'] == -1 and in_position and position_type == 'long') or (row['positions'] == 1 and in_position and position_type == 'short'):  # Close position
-            in_position = False
-            exit_price = row['close']
-            trades[-1]['Exit Date'] = index
-            trades[-1]['Exit Price'] = exit_price
+
+        # Check for TP or SL
+        if in_position:
+            current_price = row['close']
             if position_type == 'long':
-                trades[-1]['Profit/Loss'] = exit_price - trades[-1]['Entry Price']
-            else:
-                trades[-1]['Profit/Loss'] = trades[-1]['Entry Price'] - exit_price
-            trades[-1]['Status'] = 'Closed'
-            trades[-1]['Win/Lose'] = 'Win' if trades[-1]['Profit/Loss'] > 0 else 'Lose'
+                tp_price = entry_price * (1 + tp_percent / 100)  # TP for long
+                sl_price = entry_price * (1 - sl_percent / 100)  # SL for long
+                if current_price >= tp_price or current_price <= sl_price:
+                    in_position = False
+                    trades[-1]['Exit Date'] = index
+                    trades[-1]['Exit Price'] = current_price
+                    trades[-1]['Profit/Loss'] = current_price - trades[-1]['Entry Price']
+                    trades[-1]['Status'] = 'Closed'
+                    trades[-1]['Win/Lose'] = 'Win' if trades[-1]['Profit/Loss'] > 0 else 'Lose'
+            elif position_type == 'short':
+                tp_price = entry_price * (1 - tp_percent / 100)  # TP for short
+                sl_price = entry_price * (1 + sl_percent / 100)  # SL for short
+                if current_price <= tp_price or current_price >= sl_price:
+                    in_position = False
+                    trades[-1]['Exit Date'] = index
+                    trades[-1]['Exit Price'] = current_price
+                    trades[-1]['Profit/Loss'] = trades[-1]['Entry Price'] - current_price
+                    trades[-1]['Status'] = 'Closed'
+                    trades[-1]['Win/Lose'] = 'Win' if trades[-1]['Profit/Loss'] > 0 else 'Lose'
 
     # Handle the last trade if it's still open
     if in_position:
@@ -159,17 +192,45 @@ def backtest_strategy(df, symbol, interval):
 
     return pd.DataFrame(trades)
 
-# Save results to Excel
-def save_to_excel(results, filename='binance_futures_trading_results.xlsx'):
-    results.to_excel(filename, index=False)
 
+
+
+
+# Save results to CSV
+def save_to_csv(results, filename='binance_rsi_tp_sl_trading_results.csv'):
+    if os.path.exists(filename):
+        # Load existing data
+        existing_data = pd.read_csv(filename)
+        # Combine existing data with new results
+        updated_data = pd.concat([existing_data, results], ignore_index=True)
+        # Remove duplicates based on 'Entry Date' and 'Symbol'
+        # updated_data = updated_data.drop_duplicates(subset=['Entry Date', 'Symbol'], keep='last')
+        # Save updated data back to CSV
+        updated_data.to_csv(filename, index=False)
+        print(f"Results updated in existing file: {filename}")
+    else:
+        # Create new file
+        results.to_csv(filename, index=False)
+        print(f"Results saved to new file: {filename}")
+        
 # Main function
 def main():
     # Parameters
     symbol = 'BTC/USDT'  # Trading pair
     interval = '1h'  # Timeframe (1 hour)
-    start_date = '2022-01-01T00:00:00Z'  # Start date in UTC
-    end_date = '2023-01-01T00:00:00Z'  # End date in UTC
+    start_date = '2020-01-01T00:00:00Z'  # Start date in UTC
+    end_date = '2021-01-01T00:00:00Z'  # End date in UTC
+
+    # filename = 'binance_futures_trading_results.csv'
+    filename = 'sma_binance_futures_trading_results.csv'
+
+    # RSI Strategy Parameters
+    rsi_buy_threshold = 30  # Buy when RSI < 30 (oversold)
+    rsi_sell_threshold = 70  # Sell when RSI > 70 (overbought)
+
+    # TP and SL Parameters
+    tp_percent = 4  # Target profit: 5%
+    sl_percent = 2  # Stop loss: 1%
 
     # Fetch data from Binance
     print("Fetching data from Binance...")
@@ -187,14 +248,17 @@ def main():
     print("Generating signals...")
     data = sma_crossover_strategy(data)
 
+    # print("Generating signals...")
+    # data = rsi_strategy(data,rsi_buy_threshold,rsi_sell_threshold)
+
     # Backtest the strategy
     print("Backtesting strategy...")
-    trade_results = backtest_strategy(data, symbol, interval)
+    trade_results = backtest_strategy(data, symbol, interval, tp_percent, sl_percent)
 
     # Save results to Excel
     print("Saving results to Excel...")
-    save_to_excel(trade_results, filename='binance_futures_trading_results.xlsx')
-    print("Trading results saved to 'binance_futures_trading_results.xlsx'.")
+    save_to_csv(trade_results, filename=filename)
+    print(f"Trading results saved to '{filename}'.")
 
 if __name__ == "__main__":
     main()
