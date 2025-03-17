@@ -4,7 +4,7 @@ Binance Coin (BNB) - done
 Solana (SOL) - done
 Cardano (ADA) - done
 XRP (XRP) - Done
-Polkadot (DOT)
+Polkadot (DOT) - done
 Chainlink (LINK)
 Litecoin (LTC)
 Bitcoin Cash (BCH)
