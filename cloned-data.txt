@@ -5,7 +5,7 @@ Solana (SOL) - done
 Cardano (ADA) - done
 XRP (XRP) - Done
 Polkadot (DOT) - done
-Chainlink (LINK)
+Chainlink (LINK) - done
 Litecoin (LTC)
 Bitcoin Cash (BCH)
 Stellar (XLM)
