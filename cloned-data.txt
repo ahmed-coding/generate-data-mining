@@ -6,7 +6,7 @@ Cardano (ADA) - done
 XRP (XRP) - Done
 Polkadot (DOT) - done
 Chainlink (LINK) - done
-Litecoin (LTC)
+Litecoin (LTC) - 
 Bitcoin Cash (BCH)
 Stellar (XLM)
 Avalanche (AVAX)

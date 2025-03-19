@@ -9,6 +9,70 @@ import os
 # Function to fetch historical data from Binance within a date range
 
 
+symbols = [
+    'BTC/USDT',
+    'ETH/USDT',
+    'BNB/USDT',
+    'SOL/USDT',
+    'SUI/USDT',
+    'ADA/USDT',
+    'XRP/USDT',
+    'DOT/USDT',
+    'LINK/USDT',
+    'LTC/USDT',
+    'BCH/USDT',
+    'XLM/USDT',
+    'AVAX/USDT',
+    'UNI/USDT',
+    'AAVE/USDT',
+    'XTZ/USDT',
+    'ATOM/USDT',
+    'VET/USDT',
+    'ALGO/USDT',
+    'HBAR/USDT',
+    'MKR/USDT',
+    'SNX/USDT',
+    'YFI/USDT',
+    'COMP/USDT',
+    'FTM/USDT',
+    'LUNA/USDT',
+    'MATIC/USDT',
+    'FIL/USDT',
+    'CHZ/USDT',
+    'THETA/USDT',
+    'LRC/USDT',
+    'ONE/USDT',
+    'SHIB/USDT',
+    'QNT/USDT',
+    'ENJ/USDT',
+    'FLOW/USDT',
+    'CAKE/USDT',
+    'CELO/USDT',
+    'BAT/USDT',
+    'REN/USDT',
+    'LDO/USDT',
+    'RNDR/USDT',
+    'XDC/USDT',
+    'SUSHI/USDT',
+    'BNT/USDT',
+    'ZEC/USDT',
+    'DCR/USDT',
+    'DGB/USDT',
+    'NEXO/USDT',
+    'RVN/USDT',
+    'KSM/USDT',
+]
+
+intervals = [
+    '1h',
+    # '30m',
+    # '15m',
+    # '5m',
+    # '3m',
+    # '1m'
+]
+
+
 def fetch_binance_data(symbol, timeframe, start_date, end_date):
     exchange = ccxt.binance()
     since = exchange.parse8601(start_date)
@@ -42,6 +106,10 @@ def calculate_all_indicators(df):
 
     df['sma_20'] = ta.trend.sma_indicator(df['close'], window=20)
     df['sma_50'] = ta.trend.sma_indicator(df['close'], window=50)
+
+    df['ema_3'] = ta.trend.ema_indicator(df['close'], window=3)
+    df['ema_5'] = ta.trend.ema_indicator(df['close'], window=5)
+
     df['ema_20'] = ta.trend.ema_indicator(df['close'], window=20)
     df['ema_50'] = ta.trend.ema_indicator(df['close'], window=50)
     df['wma'] = ta.trend.wma_indicator(df['close'], window=14)
@@ -121,6 +189,18 @@ def calculate_all_indicators(df):
 #     df['positions'] = df['signal'].diff()
 #     return df
 
+
+# Strategy: EMA_2 and EMA_3 Crossover Strategy
+
+def ema_crossover_strategy(df):
+    df['signal'] = 0
+    # Buy signal when SMA_2 > SMA_3
+    df['signal'][df['ema_3'] > df['ema_5']] = 1
+    df['signal'][df['ema_3'] < df['ema_5']] = - \
+        1  # Sell signal when SMA_2 < SMA_3
+    df['positions'] = df['signal'].diff()
+    return df
+
 # Strategy: SMA_2 and SMA_3 Crossover Strategy
 
 
@@ -162,7 +242,7 @@ def backtest_strategy(df, symbol, interval, tp_percent=5, sl_percent=1):
             trade = {
                 'Symbol': symbol,
                 'Interval': interval,
-                'Entry Date': index,
+                'Entry Date': row['timestamp'],
                 'Entry Price': entry_price,
                 'Exit Date': None,
                 'Exit Price': None,
@@ -179,7 +259,7 @@ def backtest_strategy(df, symbol, interval, tp_percent=5, sl_percent=1):
             trade = {
                 'Symbol': symbol,
                 'Interval': interval,
-                'Entry Date': index,
+                'Entry Date': row['timestamp'],
                 'Entry Price': entry_price,
                 'Exit Date': None,
                 'Exit Price': None,
@@ -198,7 +278,7 @@ def backtest_strategy(df, symbol, interval, tp_percent=5, sl_percent=1):
                 sl_price = entry_price * (1 - sl_percent / 100)  # SL for long
                 if current_price >= tp_price or current_price <= sl_price:
                     in_position = False
-                    trades[-1]['Exit Date'] = index
+                    trades[-1]['Exit Date'] = row['timestamp']
                     trades[-1]['Exit Price'] = current_price
                     trades[-1]['Profit/Loss'] = current_price - \
                         trades[-1]['Entry Price']
@@ -209,7 +289,7 @@ def backtest_strategy(df, symbol, interval, tp_percent=5, sl_percent=1):
                 sl_price = entry_price * (1 + sl_percent / 100)  # SL for short
                 if current_price <= tp_price or current_price >= sl_price:
                     in_position = False
-                    trades[-1]['Exit Date'] = index
+                    trades[-1]['Exit Date'] = row['timestamp']
                     trades[-1]['Exit Price'] = current_price
                     trades[-1]['Profit/Loss'] = trades[-1]['Entry Price'] - \
                         current_price
@@ -218,7 +298,7 @@ def backtest_strategy(df, symbol, interval, tp_percent=5, sl_percent=1):
 
     # Handle the last trade if it's still open
     if in_position:
-        trades[-1]['Exit Date'] = df.index[-1]
+        trades[-1]['Exit Date'] = df['timestamp'].iloc[-1]
         trades[-1]['Exit Price'] = df['close'].iloc[-1]
         if position_type == 'long':
             trades[-1]['Profit/Loss'] = trades[-1]['Exit Price'] - \
@@ -252,51 +332,72 @@ def save_to_csv(results, filename='binance_rsi_tp_sl_trading_results.csv'):
 # Main function
 
 
+# Main function
 def main():
     # Parameters
-    symbol = 'BTC/USDT'  # Trading pair
-    interval = '30m'  # Timeframe (1 hour)
-    start_date = '2021-01-01T00:00:00Z'  # Start date in UTC
-    end_date = '2025-03-01T00:00:00Z'  # End date in UTC
+    # symbol = 'LTC/USDT'  # Trading pair
+    # interval = '15m'  # Timeframe (1 hour)
 
-    filename = 'binance_futures_trading_results.csv'
-    # filename = 'sma_binance_futures_trading_results.csv'
+    start_date = '2020-08-01T00:00:00Z'  # Start date in UTC
+    end_date = '2025-03-01T00:00:00Z'  # End date in UTC
+    # end_date = '2025-03-01T00:00:00Z'  # End date in UTC
+
+    rsi_filename = 'rsi_binance_futures_trading_results.csv'
+    sma_filename = 'sma_binance_futures_trading_results.csv'
+    ema_filename = 'ema_binance_futures_trading_results.csv'
 
     # RSI Strategy Parameters
-    rsi_buy_threshold = 35  # Buy when RSI < 30 (oversold)
+    rsi_buy_threshold = 30  # Buy when RSI < 30 (oversold)
     rsi_sell_threshold = 70  # Sell when RSI > 70 (overbought)
 
     # TP and SL Parameters
-    tp_percent = 5  # Target profit: 5%
+    tp_percent = 4  # Target profit: 5%
     sl_percent = 2  # Stop loss: 1%
+    for symbol in symbols:
+        print(f"Start geting data for {symbol}...")
+        for interval in intervals:
 
-    # Fetch data from Binance
-    print("Fetching data from Binance...")
-    data = fetch_binance_data(symbol, interval, start_date, end_date)
+            # Fetch data from Binance
+            print(f"Fetching data from Binance for {interval}...")
+            data = fetch_binance_data(symbol, interval, start_date, end_date)
 
-    if data.empty:
-        print(
-            f"No data available for {symbol} between {start_date} and {end_date}.")
-        return
+            if data.empty:
+                print(
+                    f"No data available for {symbol} between {start_date} and {end_date}.")
+                return
 
-    print("Generating signals...")
+            # Calculate ALL indicators
+            print("Calculating ALL indicators...")
+            data = calculate_all_indicators(data)
 
-    # Calculate ALL indicators
-    data = calculate_all_indicators(data)
+            # Generate signals
+            print("Generating SMA signals...")
+            sma_data = sma_crossover_strategy(data.copy())
 
-    # Generate signals
-    # data = sma_crossover_strategy(data)
-    data = rsi_strategy(data, rsi_buy_threshold, rsi_sell_threshold)
+            print("Generating EMA signals...")
+            ema_data = ema_crossover_strategy(data.copy())
 
-    # Backtest the strategy
-    print("Backtesting strategy...")
-    trade_results = backtest_strategy(
-        data, symbol, interval, tp_percent, sl_percent)
+            print("Generating RSI signals...")
+            rsi_data = rsi_strategy(
+                data.copy(), rsi_buy_threshold, rsi_sell_threshold)
 
-    # Save results to Excel
-    print("Saving results to Excel...")
-    save_to_csv(trade_results, filename=filename)
-    print(f"Trading results saved to '{filename}'.")
+            # Backtest the strategy
+            print("Backtesting strategy...")
+            rsi_trade_results = backtest_strategy(
+                rsi_data, symbol, interval, tp_percent, sl_percent)
+
+            sma_trade_results = backtest_strategy(
+                sma_data, symbol, interval, tp_percent, sl_percent)
+
+            ema_trade_results = backtest_strategy(
+                ema_data, symbol, interval, tp_percent, sl_percent)
+            # Save results to Excel
+            print("Saving results to Excel...")
+            save_to_csv(rsi_trade_results, filename=rsi_filename)
+            save_to_csv(sma_trade_results, filename=sma_filename)
+            save_to_csv(ema_trade_results, filename=ema_filename)
+            print(
+                f"Trading results saved to '{rsi_filename}' and '{sma_filename}'.")
 
 
 if __name__ == "__main__":
