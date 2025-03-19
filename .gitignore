@@ -1,4 +1,4 @@
 venv/
 *.csv
-test.py
+# test.py
 tempCodeRunnerFile.py
