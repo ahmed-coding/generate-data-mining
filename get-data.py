@@ -12,15 +12,65 @@ import os
 symbols = [
     'BTC/USDT',
     # 'ETH/USDT',
+    # 'BNB/USDT',
+    # 'SOL/USDT',
+    # 'SUI/USDT',
+    # 'ADA/USDT',
+    # 'XRP/USDT',
+    # 'DOT/USDT',
+    # 'LINK/USDT',
+    # 'LTC/USDT',
+    # 'BCH/USDT',
+    # 'XLM/USDT',
+    # 'AVAX/USDT',
+    # 'UNI/USDT',
+    # 'AAVE/USDT',
+    # 'XTZ/USDT',
+    # 'ATOM/USDT',
+    # 'VET/USDT',
+    # 'ALGO/USDT',
+    # 'HBAR/USDT',
+    # 'MKR/USDT',
+    # 'SNX/USDT',
+    # 'YFI/USDT',
+    # 'COMP/USDT',
+    # 'FTM/USDT',
+    # 'LUNA/USDT',
+    # 'MATIC/USDT',
+    # 'FIL/USDT',
+    # 'CHZ/USDT',
+    # 'THETA/USDT',
+    # 'LRC/USDT',
+    # 'ONE/USDT',
+    # 'SHIB/USDT',
+    # 'QNT/USDT',
+    # 'ENJ/USDT',
+    # 'FLOW/USDT',
+    # 'CAKE/USDT',
+    # 'CELO/USDT',
+    # 'BAT/USDT',
+    # 'REN/USDT',
+    # 'LDO/USDT',
+    # 'RNDR/USDT',
+    # 'XDC/USDT',
+    # 'SUSHI/USDT',
+    # 'BNT/USDT',
+    # 'ZEC/USDT',
+    # 'DCR/USDT',
+    # 'DGB/USDT',
+    # 'NEXO/USDT',
+    # 'RVN/USDT',
+    # 'KSM/USDT',
 ]
 
+
 intervals = [
-    # '1h',
+    '1h',
     # '30m',
     # '15m',
-    '5m',
-    '3m',
-    '1m'
+    # '5m',
+    # '3m',
+    # '1m'
 ]
 
 
@@ -168,6 +218,8 @@ def rsi_strategy(df, rsi_buy_threshold=30, rsi_sell_threshold=70):
     return df
 
 # Backtest the strategy with TP and SL
+# rsi = 6 of 21, sma = 12 of 18, ema = 12 of 18
+# rsi = 6 of 23, sma = 14 of 26, ema = 13 of 26
 
 
 def backtest_strategy(df, symbol, interval, tp_percent=5, sl_percent=1):
@@ -215,10 +267,14 @@ def backtest_strategy(df, symbol, interval, tp_percent=5, sl_percent=1):
         # Check for TP or SL
         if in_position:
             current_price = row['close']
+            top_price = row['high']
+            low_price = row['low']
             if position_type == 'long':
                 tp_price = entry_price * (1 + tp_percent / 100)  # TP for long
                 sl_price = entry_price * (1 - sl_percent / 100)  # SL for long
-                if current_price >= tp_price or current_price <= sl_price:
+                # if current_price >= tp_price or current_price <= sl_price:
+                if top_price >= tp_price or low_price <= sl_price:
+
                     in_position = False
                     trades[-1]['Exit Date'] = row['timestamp']
                     trades[-1]['Exit Price'] = current_price
@@ -229,7 +285,9 @@ def backtest_strategy(df, symbol, interval, tp_percent=5, sl_percent=1):
             elif position_type == 'short':
                 tp_price = entry_price * (1 - tp_percent / 100)  # TP for short
                 sl_price = entry_price * (1 + sl_percent / 100)  # SL for short
-                if current_price <= tp_price or current_price >= sl_price:
+                # if current_price <= tp_price or current_price >= sl_price:
+                if low_price <= tp_price or top_price >= sl_price:
+
                     in_position = False
                     trades[-1]['Exit Date'] = row['timestamp']
                     trades[-1]['Exit Price'] = current_price
@@ -281,12 +339,8 @@ def main():
     # interval = '15m'  # Timeframe (1 hour)
 
     start_date = '2020-01-01T00:00:00Z'  # Start date in UTC
-    end_date = '2025-03-01T00:00:00Z'  # End date in UTC
     # end_date = '2025-03-01T00:00:00Z'  # End date in UTC
-
-    rsi_filename = 'rsi_binance_futures_trading_results.csv'
-    sma_filename = 'sma_binance_futures_trading_results.csv'
-    ema_filename = 'ema_binance_futures_trading_results.csv'
+    end_date = '2020-02-01T00:00:00Z'  # End date in UTC
 
     # RSI Strategy Parameters
     rsi_buy_threshold = 30  # Buy when RSI < 30 (oversold)
@@ -295,7 +349,12 @@ def main():
     # TP and SL Parameters
     tp_percent = 4  # Target profit: 5%
     sl_percent = 2  # Stop loss: 1%
+
     for symbol in symbols:
+        rsi_filename = f'{symbol.replace("/","")}_rsi_binance_futures_trading_results.csv'
+        sma_filename = f'{symbol.replace("/","")}_sma_binance_futures_trading_results.csv'
+        ema_filename = f'{symbol.replace("/","")}_ema_binance_futures_trading_results.csv'
+
         print(f"Start geting data for {symbol}...")
         for interval in intervals:
 
