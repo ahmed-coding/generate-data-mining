@@ -351,9 +351,16 @@ def main():
     sl_percent = 2  # Stop loss: 1%
 
     for symbol in symbols:
-        rsi_filename = f'{symbol.replace("/","")}_rsi_binance_futures_trading_results.csv'
-        sma_filename = f'{symbol.replace("/","")}_sma_binance_futures_trading_results.csv'
-        ema_filename = f'{symbol.replace("/","")}_ema_binance_futures_trading_results.csv'
+        if not os.path.exists(f'{symbol.replace("/","")}'):
+            os.makedirs(f'{symbol.replace("/","")}')
+
+        rsi_filename = f'{symbol.replace("/","")}/{symbol.replace("/","")}_rsi_binance_futures_trading_results.csv'
+        sma_filename = f'{symbol.replace("/","")}/{symbol.replace("/","")}_sma_binance_futures_trading_results.csv'
+        ema_filename = f'{symbol.replace("/","")}/{symbol.replace("/","")}_ema_binance_futures_trading_results.csv'
+
+        # rsi_filename = f'{symbol.replace("/","")}_rsi_binance_futures_trading_results.csv'
+        # sma_filename = f'{symbol.replace("/","")}_sma_binance_futures_trading_results.csv'
+        # ema_filename = f'{symbol.replace("/","")}_ema_binance_futures_trading_results.csv'
 
         print(f"Start geting data for {symbol}...")
         for interval in intervals:

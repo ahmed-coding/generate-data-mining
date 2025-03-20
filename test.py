@@ -1,3 +1,7 @@
+import os
+
+os('bnb/', 1)
+
 intervals = [
     '1h',
     '30m',
@@ -23,16 +27,16 @@ symbols = [
     'DOT/USDT',
     'LINK/USDT',
     'LTC/USDT',
-    # 'BCH/USDT',
-    # 'XLM/USDT',
-    # 'AVAX/USDT',
-    # 'UNI/USDT',
-    # 'AAVE/USDT',
-    # 'XTZ/USDT',
-    # 'ATOM/USDT',
-    # 'VET/USDT',
-    # 'ALGO/USDT',
-    # 'HBAR/USDT',
+    'BCH/USDT',
+    'XLM/USDT',
+    'AVAX/USDT',
+    'UNI/USDT',
+    'AAVE/USDT',
+    'XTZ/USDT',
+    'ATOM/USDT',
+    'VET/USDT',
+    'ALGO/USDT',
+    'HBAR/USDT',
     # 'MKR/USDT',
     # 'SNX/USDT',
     # 'YFI/USDT',
