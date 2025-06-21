@@ -10,10 +10,10 @@ import os
 
 
 symbols = [
-    # 'BTC/USDT',
-    'SOL/USDT',
+    'BTC/USDT',
     # 'ETH/USDT',
     # 'BNB/USDT',
+    # 'SOL/USDT',
     # 'SUI/USDT',
     # 'ADA/USDT',
     # 'XRP/USDT',
@@ -66,8 +66,8 @@ symbols = [
 
 intervals = [
     '1h',
-    # '30m',
-    '15m',
+    '30m',
+    # '15m',
     # '5m',
     # '3m',
     # '1m'
@@ -90,71 +90,79 @@ def calculate_all_indicators(df):
 
     df['ema_20'] = ta.trend.ema_indicator(df['close'], window=20)
     df['ema_50'] = ta.trend.ema_indicator(df['close'], window=50)
-    # df['wma'] = ta.trend.wma_indicator(df['close'], window=14)
+    df['wma'] = ta.trend.wma_indicator(df['close'], window=14)
     df['macd'] = ta.trend.macd(df['close'])
     df['macd_signal'] = ta.trend.macd_signal(df['close'])
     df['macd_diff'] = ta.trend.macd_diff(df['close'])
-    # df['adx'] = ta.trend.adx(df['high'], df['low'], df['close'], window=14)
-    # df['cci'] = ta.trend.cci(df['high'], df['low'], df['close'], window=14)
-    # df['dpo'] = ta.trend.dpo(df['close'], window=20)
-    # df['kst'] = ta.trend.kst(df['close'])
-    # df['kst_sig'] = ta.trend.kst_sig(df['close'])
-    # df['ichimoku_conv'] = ta.trend.ichimoku_conversion_line(
-    #     df['high'], df['low'])
-    # df['ichimoku_base'] = ta.trend.ichimoku_base_line(df['high'], df['low'])
-    # df['ichimoku_a'] = ta.trend.ichimoku_a(df['high'], df['low'])
-    # df['ichimoku_b'] = ta.trend.ichimoku_b(df['high'], df['low'])
-    # df['aroon_up'] = ta.trend.aroon_up(
-    #     df['high'], df['low'], window=14)  # Fixed: Added 'high' and 'low'
-    # df['aroon_down'] = ta.trend.aroon_down(
-    #     df['high'], df['low'], window=14)  # Fixed: Added 'high' and 'low'
-    # df['stc'] = ta.trend.stc(df['close'])
+    df['adx'] = ta.trend.adx(df['high'], df['low'], df['close'], window=14)
+    df['cci'] = ta.trend.cci(df['high'], df['low'], df['close'], window=14)
+    df['dpo'] = ta.trend.dpo(df['close'], window=20)
+    df['kst'] = ta.trend.kst(df['close'])
+    df['kst_sig'] = ta.trend.kst_sig(df['close'])
+    df['ichimoku_conv'] = ta.trend.ichimoku_conversion_line(
+        df['high'], df['low'])
+    df['ichimoku_base'] = ta.trend.ichimoku_base_line(df['high'], df['low'])
+    df['ichimoku_a'] = ta.trend.ichimoku_a(df['high'], df['low'])
+    df['ichimoku_b'] = ta.trend.ichimoku_b(df['high'], df['low'])
+    df['aroon_up'] = ta.trend.aroon_up(
+        df['high'], df['low'], window=14)  # Fixed: Added 'high' and 'low'
+    df['aroon_down'] = ta.trend.aroon_down(
+        df['high'], df['low'], window=14)  # Fixed: Added 'high' and 'low'
+    df['stc'] = ta.trend.stc(df['close'])
 
     # Momentum Indicators
     df['rsi'] = ta.momentum.rsi(df['close'], window=14)
-    # df['stoch'] = ta.momentum.stoch(
-    #     df['high'], df['low'], df['close'], window=14)
-    # df['stoch_signal'] = ta.momentum.stoch_signal(
-    #     df['high'], df['low'], df['close'], window=14)
-    # df['tsi'] = ta.momentum.tsi(df['close'])
-    # df['uo'] = ta.momentum.ultimate_oscillator(
-    #     df['high'], df['low'], df['close'])
-    # df['wr'] = ta.momentum.williams_r(
-    #     df['high'], df['low'], df['close'], lbp=14)
-    # df['ao'] = ta.momentum.awesome_oscillator(df['high'], df['low'])
-    # df['kama'] = ta.momentum.kama(df['close'])
+    df['stoch'] = ta.momentum.stoch(
+        df['high'], df['low'], df['close'], window=14)
+    df['stoch_signal'] = ta.momentum.stoch_signal(
+        df['high'], df['low'], df['close'], window=14)
+    df['tsi'] = ta.momentum.tsi(df['close'])
+    df['uo'] = ta.momentum.ultimate_oscillator(
+        df['high'], df['low'], df['close'])
+    df['wr'] = ta.momentum.williams_r(
+        df['high'], df['low'], df['close'], lbp=14)
+    df['ao'] = ta.momentum.awesome_oscillator(df['high'], df['low'])
+    df['kama'] = ta.momentum.kama(df['close'])
 
-    # # Volatility Indicators
-    # df['atr'] = ta.volatility.average_true_range(
-    #     df['high'], df['low'], df['close'], window=14)
-    # df['bb_high'] = ta.volatility.bollinger_hband(
-    #     df['close'], window=20, window_dev=2)
-    # df['bb_low'] = ta.volatility.bollinger_lband(
-    #     df['close'], window=20, window_dev=2)
-    # df['bb_mavg'] = ta.volatility.bollinger_mavg(df['close'], window=20)
-    # df['bb_width'] = ta.volatility.bollinger_wband(
-    #     df['close'], window=20, window_dev=2)
-    # df['kc_high'] = ta.volatility.keltner_channel_hband(
-    #     df['high'], df['low'], df['close'], window=20)
-    # df['kc_low'] = ta.volatility.keltner_channel_lband(
-    #     df['high'], df['low'], df['close'], window=20)
-    # df['dc_high'] = ta.volatility.donchian_channel_hband(
-    #     df['high'], df['low'], df['close'], window=20)  # Fixed: Added 'high' and 'low'
-    # df['dc_low'] = ta.volatility.donchian_channel_lband(
-    #     df['high'], df['low'], df['close'], window=20)  # Fixed: Added 'high' and 'low'
+    # Volatility Indicators
+    df['atr'] = ta.volatility.average_true_range(
+        df['high'], df['low'], df['close'], window=14)
+    df['bb_high'] = ta.volatility.bollinger_hband(
+        df['close'], window=20, window_dev=2)
+    df['bb_low'] = ta.volatility.bollinger_lband(
+        df['close'], window=20, window_dev=2)
+    df['bb_mavg'] = ta.volatility.bollinger_mavg(df['close'], window=20)
+    df['bb_width'] = ta.volatility.bollinger_wband(
+        df['close'], window=20, window_dev=2)
+    df['kc_high'] = ta.volatility.keltner_channel_hband(
+        df['high'], df['low'], df['close'], window=20)
+    df['kc_low'] = ta.volatility.keltner_channel_lband(
+        df['high'], df['low'], df['close'], window=20)
+    df['dc_high'] = ta.volatility.donchian_channel_hband(
+        df['high'], df['low'], df['close'], window=20)  # Fixed: Added 'high' and 'low'
+    df['dc_low'] = ta.volatility.donchian_channel_lband(
+        df['high'], df['low'], df['close'], window=20)  # Fixed: Added 'high' and 'low'
 
-    # # Volume Indicators
-    # df['obv'] = ta.volume.on_balance_volume(df['close'], df['volume'])
-    # df['cmf'] = ta.volume.chaikin_money_flow(
-    #     df['high'], df['low'], df['close'], df['volume'], window=20)
-    # df['fi'] = ta.volume.force_index(df['close'], df['volume'], window=13)
-    # # Fixed: Removed redundant 'window' argument
-    # df['eom'] = ta.volume.ease_of_movement(
-    #     df['high'], df['low'], df['volume'], window=14)
-    # df['vpt'] = ta.volume.volume_price_trend(df['close'], df['volume'])
-    # df['nvi'] = ta.volume.negative_volume_index(df['close'], df['volume'])
-    # df['vwap'] = ta.volume.volume_weighted_average_price(
-    #     df['high'], df['low'], df['close'], df['volume'])
+    # Volume Indicators
+    df['obv'] = ta.volume.on_balance_volume(df['close'], df['volume'])
+    df['cmf'] = ta.volume.chaikin_money_flow(
+        df['high'], df['low'], df['close'], df['volume'], window=20)
+    df['fi'] = ta.volume.force_index(df['close'], df['volume'], window=13)
+    # Fixed: Removed redundant 'window' argument
+    df['eom'] = ta.volume.ease_of_movement(
+        df['high'], df['low'], df['volume'], window=14)
+    df['vpt'] = ta.volume.volume_price_trend(df['close'], df['volume'])
+    df['nvi'] = ta.volume.negative_volume_index(df['close'], df['volume'])
+    df['vwap'] = ta.volume.volume_weighted_average_price(
+        df['high'], df['low'], df['close'], df['volume'])
+
+    # Add action, reward, done columns to the DataFrame if not present
+    if 'action' not in df.columns:
+        df['action'] = np.nan
+    if 'reward' not in df.columns:
+        df['reward'] = np.nan
+    if 'done' not in df.columns:
+        df['done'] = np.nan
 
     return df
 
@@ -165,8 +173,7 @@ def ema_crossover_strategy(df):
     df['signal'] = 0
     # Buy signal when EMA_2 > EMA_5
     df.loc[df['ema_3'] > df['ema_5'], 'signal'] = 1  # Buy signal
-    df.loc[df['ema_3'] < df['ema_5'], 'signal'] = - \
-        1  # Sell signal when EMA_2 < EMA_5
+    df.loc[df['ema_3'] < df['ema_5'], 'signal'] = 2 # Sell signal when EMA_2 < EMA_5
     df['positions'] = df['signal'].diff()
     return df
 
@@ -177,30 +184,19 @@ def sma_crossover_strategy(df):
     df['signal'] = 0
     # Buy signal when SMA_2 > SMA_3
     df.loc[df['sma_2'] > df['sma_3'], 'signal'] = 1
-    df.loc[df['sma_2'] < df['sma_3'], 'signal'] = - \
-        1  # Sell signal when SMA_2 < SMA_3
+    df.loc[df['sma_2'] < df['sma_3'], 'signal'] = 2  # Sell signal when SMA_2 < SMA_3
     df['positions'] = df['signal'].diff()
     return df
 
 # Strategy: RSI-Based Strategy for Long and Short Trades
 
 
-def rsi_strategy(df, rsi_buy_threshold=40, rsi_sell_threshold=70):
+def rsi_strategy(df, rsi_buy_threshold=30, rsi_sell_threshold=70):
     df['signal'] = 0
     # Buy signal when RSI < 30 (oversold)
     df.loc[df['rsi'] < rsi_buy_threshold, 'signal'] = 1
-    df.loc[df['rsi'] > rsi_sell_threshold, 'signal'] = - \
-        1  # Sell signal when RSI > 70 (overbought)
+    df.loc[df['rsi'] > rsi_sell_threshold, 'signal'] = 2 # Sell signal when RSI > 70 (overbought)
     df['positions'] = df['signal'].diff()
-    return df
-
-# 4. تعريف استراتيجية بسيطة (مثلاً MACD)
-def macd_strategy(df,):
-    df['signal'] = 0
-    df.loc[df['macd'] > df['macd_signal'], 'signal'] = 1  # Buy signal
-    df.loc[df['macd'] < df['macd_signal'], 'signal'] = -1  # Sell signal
-    df['positions'] = df['signal'].diff()
-    # Generate buy/sell signals based on MACD
     return df
 
 # Backtest the strategy with TP and SL
@@ -232,7 +228,7 @@ def backtest_strategy(df, symbol, interval, tp_percent=5, sl_percent=1):
                 **{col: row[col] for col in df.columns if col not in ['signal', 'positions']}
             }
             trades.append(trade)
-        elif row['signal'] == -1 and not in_position:  # Sell signal (short)
+        elif row['signal'] == 2 and not in_position:  # Sell signal (short)
             in_position = True
             position_type = 'short'
             entry_price = row['close']
@@ -341,8 +337,8 @@ def main():
     rsi_sell_threshold = 70  # Sell when RSI > 70 (overbought)
 
     # TP and SL Parameters
-    tp_percent = 1.5  # Target profit: 5%
-    sl_percent = 1  # Stop loss: 1%
+    tp_percent = 4  # Target profit: 5%
+    sl_percent = 2  # Stop loss: 1%
 
     for symbol in symbols:
         if not os.path.exists(f'{symbol.replace("/","")}'):
@@ -358,7 +354,7 @@ def main():
             rsi_filename = f'{symbol.replace("/","")}/{symbol.replace("/","")}_{interval}_rsi_results.csv'
             sma_filename = f'{symbol.replace("/","")}/{symbol.replace("/","")}_{interval}_sma_results.csv'
             ema_filename = f'{symbol.replace("/","")}/{symbol.replace("/","")}_{interval}_ema_results.csv'
-            macd_filename = f'{symbol.replace("/","")}/{symbol.replace("/","")}_{interval}_macd_results.csv'
+
             # Fetch data from Binance
             print(f"Fetching data from Binance for {symbol}-{interval}...")
             data = get_csv_data(symbol, interval, start_date, end_date)
@@ -382,9 +378,6 @@ def main():
             print("Generating RSI signals...")
             rsi_data = rsi_strategy(
                 data.copy(), rsi_buy_threshold, rsi_sell_threshold)
-            
-            print("Generating MACD signals...")
-            macd_data = macd_strategy(data.copy())
 
             # Backtest the strategy
             print("Backtesting strategy...")
@@ -396,18 +389,13 @@ def main():
 
             ema_trade_results = backtest_strategy(
                 ema_data, symbol, interval, tp_percent, sl_percent)
-            
-            macd_trade_results = backtest_strategy(macd_data, symbol, interval, tp_percent, sl_percent)
-            
             # Save results to Excel
             print("Saving results to Excel...")
             save_to_csv(rsi_trade_results, filename=rsi_filename)
             save_to_csv(sma_trade_results, filename=sma_filename)
             save_to_csv(ema_trade_results, filename=ema_filename)
-            save_to_csv(macd_trade_results, filename=macd_filename)
             print(
                 f"Trading results saved to '{rsi_filename}' and '{sma_filename}'.")
-            
 
 
 if __name__ == "__main__":

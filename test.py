@@ -1,6 +1,6 @@
 import os
 
-os('bnb/', 1)
+# os('bnb/', 1)
 
 intervals = [
     '1h',
@@ -74,3 +74,19 @@ data = 'BAT/USDT'
 
 print(data.replace('/', ''))
 print(data)
+
+intervals = [
+    '1h',
+    '30m',
+    '15m',
+    '5m',
+    '3m',
+    '1m',
+
+]
+
+print("1asdfsadf" if 'h1' in intervals else "0")
+
+
+
+interval = "5m"

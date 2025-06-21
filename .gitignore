@@ -2,3 +2,6 @@ venv/
 *.csv
 # test.py
 tempCodeRunnerFile.py
+input/
+*.npz
+__pycache__/
